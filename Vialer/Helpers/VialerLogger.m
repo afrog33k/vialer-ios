@@ -8,6 +8,7 @@
 #import "lelib.h"
 #import "SPLumberjackLogFormatter.h"
 @import UIKit;
+
 #import "Vialer-Swift.h"
 
 
@@ -70,9 +71,7 @@ static NSString * const DDLogWrapperShouldUseRemoteLoggingKey = @"DDLogWrapperSh
     NSString *logFile = [NSString stringWithFormat:@"%s", file];
     NSString *logFunction = [NSString stringWithFormat:@"%s", function];
 
-    // Add in the Connection type.
-    AppDelegate *delegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
-    message = [NSString stringWithFormat:@"[%@] %@", delegate.reachability.statusString, message];
+    message = [self addExtraInfoToMessage:message];
 
     DDLogMessage *logMessage = [[DDLogMessage alloc] initWithMessage:message
                                                                level:LOG_LEVEL_DEF
@@ -90,11 +89,15 @@ static NSString * const DDLogWrapperShouldUseRemoteLoggingKey = @"DDLogWrapperSh
 }
 
 + (void)logWithDDLogMessage:(DDLogMessage *)message {
-    // Add in the Connection type.
-    AppDelegate *delegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
-    message->_message = [NSString stringWithFormat:@"[%@] %@", delegate.reachability.statusString, message.message];
+    message->_message = [self addExtraInfoToMessage:message.message];
     [[DDLog sharedInstance] log:LOG_ASYNC_ENABLED message:message];
     [self logMessageToLogEntriesWitMessage:message];
+}
+
++ (NSString *)addExtraInfoToMessage:(NSString *)message {
+    // Add in the Connection type.
+    AppDelegate *delegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
+    return [NSString stringWithFormat:@"[%@ - %@] %@", delegate.reachability.statusString, [AppInfo currentAppVersion], message];
 }
 
 + (BOOL)remoteLoggingEnabled {
